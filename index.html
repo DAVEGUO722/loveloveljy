@@ -99,14 +99,43 @@
             color: #ff477e;
             text-decoration: underline;
         }
+        
+        /* 底部孩子们样式 */
         footer {
             margin-top: 30px;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             color: #777;
         }
+        .kids-title {
+            font-weight: bold;
+            color: #ff5c8a;
+            margin-bottom: 8px;
+        }
+        .kids-links {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+        .kid-tag {
+            background: #fff0f3;
+            color: #ff477e;
+            padding: 5px 12px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            border: 1px solid #ff758c;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .kid-tag:hover {
+            background: #ff477e;
+            color: white;
+            transform: translateY(-2px);
+        }
 
-        /* 相册弹窗样式 */
-        #album-modal {
+        /* 通用弹窗样式（相册 & 玩偶介绍） */
+        .modal {
             display: none;
             position: fixed;
             z-index: 1000;
@@ -120,38 +149,47 @@
             flex-direction: column;
             padding: 20px;
         }
-        .album-content {
+        .modal-content {
             background: white;
             padding: 30px;
             border-radius: 15px;
-            max-width: 700px;
+            max-width: 600px;
             width: 100%;
             max-height: 85vh;
             overflow-y: auto;
             position: relative;
             text-align: center;
         }
-        .album-content h2 {
+        .modal-content h2 {
             color: #ff477e;
+            margin-bottom: 10px;
+        }
+        .modal-desc {
+            color: #666;
+            font-size: 1rem;
             margin-bottom: 20px;
+            line-height: 1.5;
+            background: #fff8f9;
+            padding: 10px;
+            border-radius: 8px;
         }
-        .album-grid {
+        .modal-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
         }
-        .album-grid img {
+        .modal-grid img {
             width: 100%;
-            height: 150px;
+            height: 130px;
             object-fit: cover;
             border-radius: 8px;
             cursor: pointer;
             transition: transform 0.2s;
         }
-        .album-grid img:hover {
+        .modal-grid img:hover {
             transform: scale(1.03);
         }
-        #album-close {
+        .close-btn {
             position: absolute;
             top: 15px;
             right: 20px;
@@ -159,16 +197,43 @@
             color: #aaa;
             cursor: pointer;
         }
-        #album-close:hover {
+        .close-btn:hover {
             color: #333;
+        }
+
+        /* 大图预览弹窗 */
+        #lightbox-modal {
+            display: none;
+            position: fixed;
+            z-index: 1100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        #lightbox-img {
+            max-width: 90%;
+            max-height: 85vh;
+            border-radius: 8px;
+        }
+        #lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: white;
+            font-size: 2.5rem;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1> Dave❤️Jane
-        郭亚轩❤️李佳仪 </h1>
+        <h1> Dave ❤️ Jane<br>郭亚轩 ❤️ 李佳仪 </h1>
         <p class="subtitle">老婆我现在肚子好饿你还在那上课</p>
 
         <!-- 计时器 -->
@@ -205,61 +270,99 @@
             </div>
         </div>
 
+        <!-- 底部孩子们（玩偶们） -->
         <footer>
-            <p>             孩子们
-                胖嘟嘟 库儿 博德 小火人 suki 吉伊 卡皮巴拉</p>
+            <div class="kids-title">🧸 孩子们专属基地（点击认识他们）</div>
+            <div class="kids-links">
+                <span class="kid-tag" onclick="openKid('pangdudu')">胖嘟嘟</span>
+                <span class="kid-tag" onclick="openKid('kuer')">库儿</span>
+                <span class="kid-tag" onclick="openKid('bode')">博德</span>
+                <span class="kid-tag" onclick="openKid('xiaohuoren')">小火人</span>
+                <span class="kid-tag" onclick="openKid('suki')">suki</span>
+                <span class="kid-tag" onclick="openKid('jiyi')">吉伊</span>
+                <span class="kid-tag" onclick="openKid('kapibala')">卡皮巴拉</span>
+            </div>
         </footer>
     </div>
 
-    <!-- 相册弹窗 -->
-    <div id="album-modal" onclick="closeAlbum(event)">
-        <div class="album-content" onclick="event.stopPropagation()">
-            <span id="album-close" onclick="closeAlbumDirect()">&times;</span>
-            <h2 id="album-title">相册标题</h2>
-            <div class="album-grid" id="album-images">
-                <!-- 动态填充多张照片 -->
+    <!-- 通用相册/玩偶弹窗 -->
+    <div id="modal" class="modal" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="close-btn" onclick="closeModalDirect()">&times;</span>
+            <h2 id="modal-title">标题</h2>
+            <div id="modal-desc" class="modal-desc" style="display: none;"></div>
+            <div class="modal-grid" id="modal-images">
+                <!-- 动态填充照片 -->
             </div>
         </div>
     </div>
 
+    <!-- 大图预览弹窗 -->
+    <div id="lightbox-modal" onclick="closeLightbox()">
+        <span id="lightbox-close">&times;</span>
+        <img id="lightbox-img" src="" alt="大图">
+    </div>
+
     <script>
         // ==========================================
-        // 在这里配置每个主题下的“多张照片”
-        // 你可以随时增减图片文件名
+        // 旅行相册数据配置
         // ==========================================
         const albumsData = {
             first: {
                 title: "first trip ✈️ izu 相册",
-                images: [
-                    "photo1.jpg"
-                
-                ]
+                images: ["photo1.jpg"]
             },
             chocolate: {
                 title: "chocolate factory 🍰 sapporo 相册",
                 images: [
-                    "photo2.jpg",
-                    "photo2_extra1.jpg",
-                    "photo2_extra2.jpg",
-                    "photo2_extra3.jpg",
-                    "photo2_extra4.jpg",
-                    "photo2_extra5.jpg",
-                    "photo2_extra6.jpg",
-                    "photo2_extra7.jpg",
-                    "photo2_extra8.jpg",
-                    "photo2_extra9.jpg",
-                    
-                
-                    
+                    "photo2.jpg", "photo2_extra1.jpg", "photo2_extra2.jpg", 
+                    "photo2_extra3.jpg", "photo2_extra4.jpg", "photo2_extra5.jpg"，"photo2_extra6.jpg","photo2_extra7.jpg","photo2_extra8.jpg","photo2_extra9.jpg",
                 ]
             },
             original: {
                 title: "original day ✨ tokyo相册",
-                images: [
-                    "photo3.jpg",
-                    "photo3_extra1.jpg",
-                    "photo3_extra2.jpg"
-                ]
+                images: ["photo3.jpg", "photo3_extra1.jpg", "photo3_extra2.jpg"]
+            }
+        };
+
+        // ==========================================
+        // 孩子们（玩偶）数据配置（你可以在这里改介绍和加图片）
+        // ==========================================
+        const kidsData = {
+            pangdudu: {
+                name: "胖嘟嘟 🐱 ",
+                desc: "家里最稳重（也最胖）的崽，",
+                images: ["pangdudu1.jpg", "pangdudu2.jpg"] // 以后放对应的照片文件名
+            },
+            kuer: {
+                name: "库儿 🧸",
+                desc: "",
+                images: ["kuer1.jpg"]
+            },
+            bode: {
+                name: "博德 🐧",
+                desc: "",
+                images: ["bode1.jpg"]
+            },
+            xiaohuoren: {
+                name: "小火人 🔥",
+                desc: "。",
+                images: ["xiaohuoren1.jpg"]
+            },
+            suki: {
+                name: "suki 😻",
+                desc: "",
+                images: ["suki1.jpg"]
+            },
+            jiyi: {
+                name: "吉伊 ✨",
+                desc: "",
+                images: ["jiyi1.jpg"]
+            },
+            kapibala: {
+                name: "卡皮巴拉 🍊",
+                desc: "",
+                images: ["kapibala1.jpg"]
             }
         };
 
@@ -278,34 +381,73 @@
         setInterval(updateTimer, 1000);
         updateTimer();
 
-        // 打开相册弹窗
+        // 打开旅行相册
         function openAlbum(category) {
-            const modal = document.getElementById("album-modal");
-            const titleEl = document.getElementById("album-title");
-            const gridEl = document.getElementById("album-images");
-
             const album = albumsData[category];
-            titleEl.innerText = album.title;
+            showModal(album.title, "", album.images);
+        }
+
+        // 打开玩偶主页
+        function openKid(kidKey) {
+            const kid = kidsData[kidKey];
+            showModal(kid.name, kid.desc, kid.images);
+        }
+
+        // 统一弹窗展示函数
+        function showModal(title, description, images) {
+            const modal = document.getElementById("modal");
+            const titleEl = document.getElementById("modal-title");
+            const descEl = document.getElementById("modal-desc");
+            const gridEl = document.getElementById("modal-images");
+
+            titleEl.innerText = title;
+
+            // 如果有文字介绍就显示，没有就隐藏
+            if (description) {
+                descEl.innerText = description;
+                descEl.style.display = "block";
+            } else {
+                descEl.style.display = "none";
+            }
             
-            // 清空并重新生成相册里的图片
             gridEl.innerHTML = "";
-            album.images.forEach(imgSrc => {
+            images.forEach(imgSrc => {
                 const img = document.createElement("img");
                 img.src = imgSrc;
-                img.alt = "回忆照片";
-                // 点击小图也可以做进一步处理（比如直接预览大图，这里简单展示）
+                img.alt = "照片";
+                // 容错：如果图片还没放，显示占位或点击时放大
+                img.onerror = function() {
+                    this.style.background = "#fff0f3";
+                    this.alt = "（图片待上传）";
+                };
+                img.onclick = function() {
+                    openLightbox(imgSrc);
+                };
                 gridEl.appendChild(img);
             });
 
             modal.style.display = "flex";
         }
 
-        // 关闭相册弹窗
-        function closeAlbum(event) {
-            document.getElementById("album-modal").style.display = "none";
+        // 关闭弹窗
+        function closeModal(event) {
+            document.getElementById("modal").style.display = "none";
         }
-        function closeAlbumDirect() {
-            document.getElementById("album-modal").style.display = "none";
+        function closeModalDirect() {
+            document.getElementById("modal").style.display = "none";
+        }
+
+        // 打开大图预览
+        function openLightbox(src) {
+            const lightbox = document.getElementById("lightbox-modal");
+            const lightboxImg = document.getElementById("lightbox-img");
+            lightboxImg.src = src;
+            lightbox.style.display = "flex";
+        }
+
+        // 关闭大图预览
+        function closeLightbox() {
+            document.getElementById("lightbox-modal").style.display = "none";
         }
     </script>
 </body>
