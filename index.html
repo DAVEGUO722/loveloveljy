@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DAVE and JANE </title>
+    <title>DAVE and JANE</title>
     <style>
         * {
             margin: 0;
@@ -83,16 +83,84 @@
             height: 250px;
             object-fit: cover;
             border-radius: 8px;
+            cursor: pointer;
         }
-        .photo-desc {
+        .photo-desc a {
             margin-top: 10px;
             font-size: 0.95rem;
-            color: #555;
+            color: #ff5c8a;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+            transition: color 0.2s;
+            cursor: pointer;
+        }
+        .photo-desc a:hover {
+            color: #ff477e;
+            text-decoration: underline;
         }
         footer {
             margin-top: 30px;
             font-size: 0.9rem;
             color: #777;
+        }
+
+        /* 相册弹窗样式 */
+        #album-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 20px;
+        }
+        .album-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+            text-align: center;
+        }
+        .album-content h2 {
+            color: #ff477e;
+            margin-bottom: 20px;
+        }
+        .album-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        .album-grid img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .album-grid img:hover {
+            transform: scale(1.03);
+        }
+        #album-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 1.8rem;
+            color: #aaa;
+            cursor: pointer;
+        }
+        #album-close:hover {
+            color: #333;
         }
     </style>
 </head>
@@ -102,31 +170,36 @@
         <h1>Our Love Story ❤️</h1>
         <p class="subtitle">老婆我现在肚子好饿你还在那上课</p>
 
-        <!-- （请把下面的日期改成你们在一起的日子，格式：YYYY-MM-DD） -->
+        <!-- 计时器 -->
         <div class="counter">
             <h3>bound to love</h3>
             <div id="time-elapsed">计算中...</div>
         </div>
 
-        <!-- 照片展示区 -->
+        <!-- 照片展示区（封面） -->
         <div class="photo-section">
             <h2 style="color: #ff5c8a; font-size: 1.5rem; margin-bottom: 15px;">memory</h2>
             <div class="photo-grid">
-                <!-- 照片 1 -->
+                <!-- 照片 1 组 -->
                 <div class="photo-card">
-                    <!-- 请把 src="photo1.jpg" 改成你上传到仓库里的照片文件名，或者直接填图片的在线链接 -->
-                    <img src="photo1.jpg" alt=" 李佳仪">
-                    <div class="photo-desc">first trip ✈️</div>
+                    <img src="photo1.jpg" alt="李佳仪" onclick="openAlbum('first')">
+                    <div class="photo-desc">
+                        <a onclick="openAlbum('first')">first trip ✈️ (点击看更多)</a>
+                    </div>
                 </div>
-                <!-- 照片 2 -->
+                <!-- 照片 2 组 -->
                 <div class="photo-card">
-                    <img src="photo2.jpg" alt=" 李佳仪">
-                    <div class="photo-desc">chocolate factory 🍰</div>
+                    <img src="photo2.jpg" alt="李佳仪" onclick="openAlbum('chocolate')">
+                    <div class="photo-desc">
+                        <a onclick="openAlbum('chocolate')">chocolate factory 🍰 (点击看更多)</a>
+                    </div>
                 </div>
-                <!-- 照片 3 -->
+                <!-- 照片 3 组 -->
                 <div class="photo-card">
-                    <img src="photo3.jpg" alt="地狱火">
-                    <div class="photo-desc">original day ✨</div>
+                    <img src="photo3.jpg" alt="地狱火" onclick="openAlbum('original')">
+                    <div class="photo-desc">
+                        <a onclick="openAlbum('original')">original day ✨ (点击看更多)</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -136,27 +209,92 @@
         </footer>
     </div>
 
+    <!-- 相册弹窗 -->
+    <div id="album-modal" onclick="closeAlbum(event)">
+        <div class="album-content" onclick="event.stopPropagation()">
+            <span id="album-close" onclick="closeAlbumDirect()">&times;</span>
+            <h2 id="album-title">相册标题</h2>
+            <div class="album-grid" id="album-images">
+                <!-- 动态填充多张照片 -->
+            </div>
+        </div>
+    </div>
+
     <script>
         // ==========================================
-        // 修改这里的日期为你们在一起的具体年月日
+        // 在这里配置每个主题下的“多张照片”
+        // 你可以随时增减图片文件名
         // ==========================================
-        const startDate = new Date("2026-04-29T00:00:00"); 
+        const albumsData = {
+            first: {
+                title: "first trip ✈️ izu 相册",
+                images: [
+                    "photo1.jpg",
+                    "photo1_extra1.jpg", // 如果有更多照片，可以继续加
+                    "photo1_extra2.jpg"
+                ]
+            },
+            chocolate: {
+                title: "chocolate factory 🍰 sapporo 相册",
+                images: [
+                    "photo2.jpg",
+                    "photo2_extra1.jpg"
+                ]
+            },
+            original: {
+                title: "original day ✨ tokyo相册",
+                images: [
+                    "photo3.jpg",
+                    "photo3_extra1.jpg",
+                    "photo3_extra2.jpg"
+                ]
+            }
+        };
 
+        // 计时器逻辑
+        const startDate = new Date("2026-04-29T00:00:00"); 
         function updateTimer() {
             const now = new Date();
             const diff = now - startDate;
-
             const days = Math.floor(diff / (1000 * 60 * 60 * 24));
             const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
             const minutes = Math.floor((diff / 1000 / 60) % 60);
             const seconds = Math.floor((diff / 1000) % 60);
-
             document.getElementById("time-elapsed").innerHTML = 
                 `${days} 天 ${hours} 小时 ${minutes} 分钟 ${seconds} 秒`;
         }
-
         setInterval(updateTimer, 1000);
         updateTimer();
+
+        // 打开相册弹窗
+        function openAlbum(category) {
+            const modal = document.getElementById("album-modal");
+            const titleEl = document.getElementById("album-title");
+            const gridEl = document.getElementById("album-images");
+
+            const album = albumsData[category];
+            titleEl.innerText = album.title;
+            
+            // 清空并重新生成相册里的图片
+            gridEl.innerHTML = "";
+            album.images.forEach(imgSrc => {
+                const img = document.createElement("img");
+                img.src = imgSrc;
+                img.alt = "回忆照片";
+                // 点击小图也可以做进一步处理（比如直接预览大图，这里简单展示）
+                gridEl.appendChild(img);
+            });
+
+            modal.style.display = "flex";
+        }
+
+        // 关闭相册弹窗
+        function closeAlbum(event) {
+            document.getElementById("album-modal").style.display = "none";
+        }
+        function closeAlbumDirect() {
+            document.getElementById("album-modal").style.display = "none";
+        }
     </script>
 </body>
 </html>
